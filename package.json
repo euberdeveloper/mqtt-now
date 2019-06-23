@@ -1,0 +1,37 @@
+{
+  "name": "mqtt-now",
+  "version": "1.0.0",
+  "description": "A node.js module which provides you a publisher and a subscriber, allowing you to easily run repetitive tasks. With Typescript support.",
+  "main": "dist/lib/index.js",
+  "types": "dist/lib/index.d.ts",
+  "scripts": {
+    "test": "mocha --reporter spec",
+    "nyc": "nyc --reporter=html --reporter=text --reporter=lcov npm run test",
+    "cover": "nyc report --reporter=text-lcov | coveralls",
+    "transpile": "tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/euberdeveloper/mqtt-now.git"
+  },
+  "bugs": {
+    "url": "https://github.com/euberdeveloper/mqtt-now/issues"
+  },
+  "homepage": "https://github.com/euberdeveloper/mqtt-now#readme",
+  "keywords": [
+    "mqtt",
+    "publisher",
+    "subscriber",
+    "automatic",
+    "easy"
+  ],
+  "author": "Eugenio Vinicio Berretta <euberdeveloper@gmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^12.0.10",
+    "typescript": "^3.5.2"
+  },
+  "dependencies": {
+    "mqtt": "^3.0.0"
+  }
+}
