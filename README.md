@@ -1,4 +1,4 @@
-[![NPM](https://img.shields.io/npm/l/dree.svg)](https://github.com/euberdeveloper/dree/blob/master/LICENSE.md)
+[![NPM](https://img.shields.io/npm/l/dree.svg)](https://github.com/euberdeveloper/mqtt-now/blob/master/LICENSE.md)
 
 # mqtt-now
 A node.js module which provides you a publisher and a subscriber, allowing you to easily run repetitive tasks. With Typescript support.
@@ -204,16 +204,15 @@ This method publishes every a certain amount of time the data to the topics spec
 
 **Parameters:**
 
-* __options__: The options wich specifies which topics and which data have to be sent and 
- * which url these things will be sent to.
+* __options__: The options wich specifies which topics and which data have to be sent and which url these things will be sent to.
 
 **Options parameters:**
 
 * __type__: Default value: `Protocol.MQTT`. If not overwritten, the protocol and the port of the url will be determined by this property.
-* __protocol__: Default value: `undefined`. Specifies the protocol to use in the url string. Note: overwrites the protocol specified by type property but is overwritten by url property.
-* __host__: Default value: `localhost`. Specifies the host to use in the url string. Note: overwritten by url property.
-* __port__: Default value: `undefined`. Specifies the port to use in the url string. Note: overwrites the port specified by type property but is overwritten by url property.
-* __url__: Default value: `undefined`. Specifies the url used by the connection. Note: overwrites all the other properties that specify the url.
+* __protocol__: Default value: `undefined. Specifies the protocol to use in the url string. Note: overwrites the protocol specified by type property but is overwritten by url property.
+* __host__: Default value: `localhost. Specifies the host to use in the url string. Note: overwritten by url property.
+* __port__: Default value: `undefined. Specifies the port to use in the url string. Note: overwrites the port specified by type property but is overwritten by url property.
+* __url__: Default value: `undefined. Specifies the url used by the connection. Note: overwrites all the other properties that specify the url.
 * __onError__: Default value: `error => {}`. Specifies what will be executed in case of an error. Note: overwritten by the more-specific onError option whether specified in a certain topic.
 * __actions__: Default value: `[]`. The actions (topic and message) that you want to publish. See __MqttPublishAction__ to further information.
 * __interval__: Default value: `1`. The time in milliseconds between every publication of a topic. Note: overwritten by the more-specific interval option whether specified in a certain topic.
@@ -257,7 +256,7 @@ This method subscribes to the topics specified by the options and handle the rec
 
 ## Note
 
-Please notice that you an mqtt instance have to run in your localhost in order to the above examples to work.
+Please notice that an mqtt instance have to run in your localhost in order to the above examples to work.
 
 ## Build
 
