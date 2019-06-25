@@ -1,6 +1,6 @@
 {
   "name": "mqtt-now",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "A node.js module which provides you a publisher and a subscriber, allowing you to easily run repetitive tasks. With Typescript support.",
   "main": "dist/lib/index.js",
   "types": "dist/lib/index.d.ts",

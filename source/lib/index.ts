@@ -215,7 +215,7 @@ function getUrlFromOptions(options: MqttOptions): string {
         const fallback = getProtocolDetails(options.type);
         const protocol = options.protocol || fallback.protocol;
         const host = options.host;
-        const port = options.protocol || fallback.protocol;
+        const port = options.port || fallback.port;
         url = `${protocol}://${host}:${port}`;
     }
     return url;
