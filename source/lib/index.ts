@@ -245,7 +245,7 @@ export function publish(options: MqttPublishOptions) {
     client.on('connect', () => {
         opt.actions.forEach(({ topic, message, onError, interval }) => {
             setInterval(() => {
-                client.publish(topic, getMessage(message), error => { if (error) { (onError || opt.onError) (error); });
+                client.publish(topic, getMessage(message), error => { if (error) { (onError || opt.onError) (error); } });
             }, (interval !== undefined ? interval : opt.interval));
         });
     });
@@ -264,7 +264,7 @@ export function subscribe(options: MqttSubscribeOptions) {
     client.on('connect', () => {
         opt.actions
             .forEach(({ topic, onMessage: _, onError }) => {
-                client.subscribe(topic, error => { if (error) { (onError || opt.onError) (error); });
+                client.subscribe(topic, error => { if (error) { (onError || opt.onError) (error); } });
             });
         client.on('message', (topic, payload) => {
             const action = opt.actions.find(action => action.topic === topic);
