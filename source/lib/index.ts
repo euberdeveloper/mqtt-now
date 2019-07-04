@@ -55,6 +55,14 @@ export enum Protocol {
 }
 
 /**
+ * Enumeration of available message's types.
+ */
+export enum MessageType {
+    BUFFER,
+    STRING
+}
+
+/**
  * The interface contains the action of a topic when published.
  */
 export interface MqttPublishAction {
@@ -65,7 +73,7 @@ export interface MqttPublishAction {
     /**
      * The message that will be published.
      */
-    message: string | (() => string);
+    message: (string | Buffer) | (() => (string | Buffer));
     /**
      * What will be executed in case of a publishing error.
      * Note: overwrites the onError callback specified by the options.
@@ -103,16 +111,21 @@ export interface MqttSubscribeAction {
     topic: string;
     /**
      * What will be done with the received message.
-     * Note: overwrites the onError callback specified by the options.
+     * Note: overwrites the onMessage callback specified by the options.
      */
-    onMessage?: (message: string) => void;
+    onMessage?: (message: string | Buffer) => void;
+    /**
+     * The type of the message given as argument of onMessage callback.
+     * Default: BUFFER.
+     * Note: overwrites the messageType callback specified by the options.
+     */
+    messageType?: MessageType;
     /**
      * What will be executed in case of a subscribing error.
      * Note: overwrites the onError callback specified by the options.
      */
     onError?: (error: Error) => void;
 }
-
 
 /**
  * The interface contians the options of the subscribe function.
@@ -127,7 +140,13 @@ export interface MqttSubscribeOptions extends MqttOptions {
      * What will be done with the received messages.
      * Note: overwritten by the more-specific onMessage option whether specified in a certain topic.
      */
-    onMessage?: (message: string) => void;
+    onMessage?: (message: string | Buffer) => void;
+    /**
+     * The type of the message given as parameter of onMessage callback.
+     * Default: BUFFER.
+     * Note: overwritten by the more-specific messageType option whether specified in a certain topic.
+     */
+    messageType?: MessageType;
 }
 
 /* DEFAULT OPTIONS */
@@ -161,7 +180,8 @@ const SUBSCRIBE_DEFAULT_OPTIONS: MqttSubscribeOptions = {
     url: undefined,
     actions: [],
     onError: _ => { },
-    onMessage: _ => { }
+    onMessage: _ => { },
+    messageType: MessageType.BUFFER
 };
 
 /* SUPPORT FUNCTIONS */
@@ -221,12 +241,21 @@ function getUrlFromOptions(options: MqttOptions): string {
     return url;
 }
 
-function getMessage(message: string | (() => string)): string {
-    if (typeof message === 'string') {
+function getMessage(message: (string | Buffer) | (() => (string | Buffer))): (string | Buffer) {
+    if (typeof message === 'string' || message instanceof Buffer) {
         return message;
     }
     else {
         return message();
+    }
+}
+
+function getPayload(payload: Buffer, type: MessageType): (string | Buffer) {
+    switch (type) {
+        case MessageType.BUFFER:
+            return payload;
+        case MessageType.STRING:
+            return payload.toString();
     }
 }
 
@@ -269,7 +298,7 @@ export function subscribe(options: MqttSubscribeOptions) {
         client.on('message', (topic, payload) => {
             const action = opt.actions.find(action => action.topic === topic);
             if (action) {
-                (action.onMessage || opt.onMessage) (payload.toString());
+                (action.onMessage || opt.onMessage) (getPayload(payload, (action.messageType || opt.messageType)));
             }
         });
     });

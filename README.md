@@ -36,6 +36,25 @@ const options = {
 mqttNow.publish(options);
 ```
 
+With Buffer:
+
+```js
+const mqttNow = require('mqtt-now');
+
+const options = {
+  host: 'localhost',
+  interval: 1000,
+  actions: [
+    {
+      topic: 'public',
+      message: Buffer.alloc(10, 'my message')
+    }
+  ]
+}
+
+mqttNow.publish(options);
+```
+
 With Web Sockets:
 
 ```js
@@ -87,7 +106,8 @@ const mqttNow = require('mqtt-now');
 const options = {
   host: 'localhost',
   actions: [{ topic: 'public' }, { topic: 'random' }],
-  onMessage: message => console.log('Message received ', message)
+  onMessage: message => console.log('Message received ', message),
+  messageType: mqttNow.MessageType.STRING
 }
 
 mqttNow.subscribe(options);
@@ -96,13 +116,14 @@ mqttNow.subscribe(options);
 With Web Sockets:
 
 ```js
-const { subscribe, Protocol } = require('mqtt-now');
+const { subscribe, Protocol, MessageType } = require('mqtt-now');
 
 const options = {
   type: Protocol.WS,
   host: 'localhost',
   actions: [{ topic: 'public' }, { topic: 'random' }],
-  onMessage: message => console.log('Message received ', message)
+  onMessage: message => console.log('Message received ', message),
+  messageType: MessageType.STRING
 }
 
 subscribe(options);
@@ -118,15 +139,21 @@ const options = {
   port: '1883',
   host: 'localhost',
   actions: [
-    { 
+    {
       topic: 'public',
       onError: error => console.error('Error in subscribing to "public" ', error)
-    }, 
-    { 
+    },
+    {
       topic: 'random',
       onMessage: message => console.log('Random message received ', message)
+    },
+    {
+      topic: 'buffer',
+      messageType: mqttNow.MessageType.BUFFER,
+      onMessage: message => console.log('This remains a buffer ', message)
     }
   ],
+  messageType: mqttNow.MessageType.STRING,
   onMessage: message => console.log('Message received ', message),
   onError: error => console.error('Error in subscribing ', error)
 }
@@ -160,18 +187,20 @@ const publishOptions = {
 const subscribeOptions = {
   host: 'localhost',
   actions: [
-    { topic: 'public' }, 
-    { 
+    { topic: 'public' },
+    {
       topic: 'random',
       onMessage: message => console.log('Random message received ', message)
     }
   ],
+  messageType: mqttNow.MessageType.STRING,
   onMessage: message => console.log('Message received ', message)
 }
 
 mqttNow.publish(publishOptions);
 mqttNow.subscribe(subscribeOptions);
 ```
+
 Supposing that there is a mqtt instance running in localhost,
 
 The console will result in this:
@@ -190,6 +219,7 @@ Message received  my message
 Random message received  random 0.13065012342886484
 ..................................................
 ```
+
 ## API
 
 ### publish
@@ -209,20 +239,20 @@ This method publishes every a certain amount of time the data to the topics spec
 **Options parameters:**
 
 * __type__: Default value: `Protocol.MQTT`. If not overwritten, the protocol and the port of the url will be determined by this property.
-* __protocol__: Default value: `undefined. Specifies the protocol to use in the url string. Note: overwrites the protocol specified by type property but is overwritten by url property.
-* __host__: Default value: `localhost. Specifies the host to use in the url string. Note: overwritten by url property.
-* __port__: Default value: `undefined. Specifies the port to use in the url string. Note: overwrites the port specified by type property but is overwritten by url property.
-* __url__: Default value: `undefined. Specifies the url used by the connection. Note: overwrites all the other properties that specify the url.
+* __protocol__: Default value: `undefined`. Specifies the protocol to use in the url string. Note: overwrites the protocol specified by type property but is overwritten by url property.
+* __host__: Default value: `localhost`. Specifies the host to use in the url string. Note: overwritten by url property.
+* __port__: Default value: `undefined`. Specifies the port to use in the url string. Note: overwrites the port specified by type property but is overwritten by url property.
+* __url__: Default value: `undefined`. Specifies the url used by the connection. Note: overwrites all the other properties that specify the url.
 * __onError__: Default value: `error => {}`. Specifies what will be executed in case of an error. Note: overwritten by the more-specific onError option whether specified in a certain topic.
 * __actions__: Default value: `[]`. The actions (topic and message) that you want to publish. See __MqttPublishAction__ to further information.
 * __interval__: Default value: `1`. The time in milliseconds between every publication of a topic. Note: overwritten by the more-specific interval option whether specified in a certain topic.
 
 **MqttPublishAction**
+
 * __topic__: The topic that will be published.
-* __message__: The message that will be published.
+* __message__: The message that will be published, as a string or a Buffer.
 * __onError__: Optional. What will be executed in case of a publishing error. Note: overwrites the onError callback specified by the options.
 * __interval__: Optional. The time in milliseconds between every publication of this topic. Note: overwrites the interval property specified by the options.
-
 
 ### subscribe
 
@@ -248,10 +278,13 @@ This method subscribes to the topics specified by the options and handle the rec
 * __onError__: Default value: `error => {}`. Specifies what will be executed in case of an error. Note: overwritten by the more-specific onError option whether specified in a certain topic.
 * __actions__: Default value: `[]`. The actions that specifies wich topics you want to subscribe to and what to do with the received messages. See __MqttSubscribeAction__ to further information.
 * __onMessage__: Default value: `message => {}`. What will be done with the received messages. Note: overwritten by the more-specific onMessage option whether specified in a certain topic.
+* __messageType__: Default value: `MessageType.BUFFER`. The type of the message given as argument of onMessage callback. Note: overwritten by the more-specific messageType option whether specified in a certain topic.
 
 **MqttSubscribeAction**
+
 * __topic__: The topic that will be subscribed.
 * __onMessage__: Optional. What will be done with the received message. Note: overwrites the onError callback specified by the options.
+* __messageType__: Default value: `MessageType.BUFFER`. The type of the message given as argument of onMessage callback. Note: overwrites the messageType callback specified by the options.
 * __onError__: Optional. What will be executed in case of a subscribing error. Note: overwrites the onError callback specified by the options.
 
 ## Note
