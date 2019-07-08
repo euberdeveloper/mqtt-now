@@ -63,6 +63,11 @@ export enum MessageType {
 }
 
 /**
+ * The type of the publisher object returned by the getPublisher function
+ */
+export type Publisher = (topics?: string | string[], data?: any) => void;
+
+/**
  * The interface contains the action of a topic when published.
  */
 export interface MqttPublishAction {
@@ -132,7 +137,7 @@ export interface MqttSubscribeAction {
  */
 export interface MqttSubscribeOptions extends MqttOptions {
     /**
-     * The actions that specifies wich topics you want to subscribe to and what to do
+     * The actions that specifies which topics you want to subscribe to and what to do
      * with the received messages.
      */
     actions?: MqttSubscribeAction[];
@@ -147,6 +152,36 @@ export interface MqttSubscribeOptions extends MqttOptions {
      * Note: overwritten by the more-specific messageType option whether specified in a certain topic.
      */
     messageType?: MessageType;
+}
+
+/**
+ * The interface contains the action of a topic when published by a publisher.
+ */
+export interface MqttPublisherAction {
+    /**
+     * The topic that will be published.
+     */
+    topic: string;
+    /**
+     * The message that will be published. It can be a constant value or a function that returns the value. 
+     * In case it is a function, the function can use the data passed as the second argument when publisher is called.
+     */
+    message: (string | Buffer) | ((data?: any) => (string | Buffer));
+    /**
+     * What will be executed in case of a publishing error.
+     * Note: overwrites the onError callback specified by the options.
+     */
+    onError?: (error: Error) => void;
+}
+
+/**
+ * The interface contains the options of the getPublisher function.
+ */
+export interface MqttPublisherOptions extends MqttOptions {
+    /**
+     * The actions (topic and message) that you want to publish.
+     */
+    actions?: MqttPublisherAction[];
 }
 
 /* DEFAULT OPTIONS */
@@ -184,6 +219,16 @@ const SUBSCRIBE_DEFAULT_OPTIONS: MqttSubscribeOptions = {
     messageType: MessageType.BUFFER
 };
 
+const PUBLISHER_DEFAULT_OPTIONS: MqttPublisherOptions = {
+    type: Protocol.MQTT,
+    protocol: undefined,
+    host: 'localhost',
+    port: undefined,
+    url: undefined,
+    actions: [],
+    onError: _ => { }
+};
+
 /* SUPPORT FUNCTIONS */
 
 function mergePublishOptions(options?: MqttPublishOptions): MqttPublishOptions {
@@ -215,6 +260,19 @@ function mergeSubscribeOptions(options?: MqttSubscribeOptions): MqttSubscribeOpt
     return result;
 }
 
+function mergePublisherOptions(options?: MqttPublisherOptions): MqttPublisherOptions {
+    let result: MqttPublisherOptions = {};
+    if (options) {
+        for (const key in PUBLISHER_DEFAULT_OPTIONS) {
+            result[key] = (options[key] !== undefined) ? options[key] : PUBLISHER_DEFAULT_OPTIONS[key];
+        }
+    }
+    else {
+        result = PUBLISHER_DEFAULT_OPTIONS;
+    }
+    return result;
+}
+
 function getProtocolDetails(protocol: Protocol): ProtocolDetails {
     switch (protocol) {
         case Protocol.MQTT:
@@ -241,12 +299,12 @@ function getUrlFromOptions(options: MqttOptions): string {
     return url;
 }
 
-function getMessage(message: (string | Buffer) | (() => (string | Buffer))): (string | Buffer) {
+function getMessage(message: (string | Buffer) | ((data?: any) => (string | Buffer)), data?: any): (string | Buffer) {
     if (typeof message === 'string' || message instanceof Buffer) {
         return message;
     }
     else {
-        return message();
+        return message(data);
     }
 }
 
@@ -262,12 +320,12 @@ function getPayload(payload: Buffer, type: MessageType): (string | Buffer) {
 /* EXPORTED FUNCTIONS */
 
 /**
- * This method publishes every a certain amount of time the data to the topics specified by
+ * This function publishes every a certain amount of time the data to the topics specified by
  * the options.
- * @param options The options wich specifies which topics and which data have to be sent and 
+ * @param options The options which specifies which topics and which data have to be sent and 
  * which url these things will be sent to.
  */
-export function publish(options: MqttPublishOptions) {
+export function publish(options: MqttPublishOptions): void {
     const opt = mergePublishOptions(options);
     const url = getUrlFromOptions(opt);
     const client = connect(url);
@@ -281,12 +339,12 @@ export function publish(options: MqttPublishOptions) {
 }
 
 /**
- * This method subscribes to the topics specified by the options and handle the received messages
+ * This function subscribes to the topics specified by the options and handle the received messages
  * in the way specified by the options.
- * @param options The options wich specifies which topics are to be subscribed and which message handlers
+ * @param options The options which specifies which topics are to be subscribed and which message handlers
  * are to be executed and which url is to be listened.
  */
-export function subscribe(options: MqttSubscribeOptions) {
+export function subscribe(options: MqttSubscribeOptions): void {
     const opt = mergeSubscribeOptions(options);
     const url = getUrlFromOptions(opt);
     const client = connect(url);
@@ -300,6 +358,32 @@ export function subscribe(options: MqttSubscribeOptions) {
             if (action) {
                 (action.onMessage || opt.onMessage) (getPayload(payload, (action.messageType || opt.messageType)));
             }
+        });
+    });
+}
+
+/**
+ * This function returns a promise with a Publisher, which is a function that takes a list of topics and in case some data as 
+ * arguments and when is called publishes everything is specified in the options given to this function. 
+ * In the returned function: If no topic or an  empty string is passed, it publishes all the topics. Also, in case data is passed
+ * as second argument, it will passed as the argument of each function that generates the message for a topic.
+ * @param options The options which specifies which topics and which data have to be sent and 
+ * which url these things will be sent to.
+ */
+export async function getPublisher(options: MqttPublisherOptions): Promise<Publisher> {
+    return new Promise((resolve, _reject) => {
+        const opt = mergePublisherOptions(options);
+        const url = getUrlFromOptions(opt);
+        const client = connect(url);
+        client.on('connect', () => {
+            resolve((topics?: string | string[], data?: any) => {
+                topics = typeof topics === 'string' && topics !== '' ? [ topics ] : topics;
+                opt.actions.forEach(({ topic, message, onError }) => {
+                    if (!topics || topics.includes(topic)) {
+                        client.publish(topic, getMessage(message, data), error => { if (error) { (onError || opt.onError) (error); } });
+                    }
+                });
+            });
         });
     });
 }
