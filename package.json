@@ -17,7 +17,9 @@
     "prebundle": "npm run clean",
     "bundle": "webpack",
     "lint": "eslint source --ext ts --format codeframe",
-    "lint:fix": "eslint source --ext ts --format codeframe --fix"
+    "lint:fix": "eslint source --ext ts --format codeframe --fix",
+    "docs:html": "typedoc",
+    "docs:html-dev": "typedoc --options typedoc.dev.js"
   },
   "repository": {
     "type": "git",
@@ -52,6 +54,7 @@
     "prettier": "^2.2.1",
     "shx": "^0.3.3",
     "ts-loader": "^8.1.0",
+    "typedoc": "^0.20.35",
     "typescript": "^4.2.4",
     "webpack": "^5.33.2",
     "webpack-cli": "^4.6.0",
