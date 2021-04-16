@@ -19,7 +19,8 @@
     "lint": "eslint source --ext ts --format codeframe",
     "lint:fix": "eslint source --ext ts --format codeframe --fix",
     "docs:html": "typedoc",
-    "docs:html-dev": "typedoc --options typedoc.dev.js"
+    "docs:html-dev": "typedoc --options typedoc.dev.js",
+    "prepublishOnly": "npm run bundle"
   },
   "repository": {
     "type": "git",
