@@ -4,6 +4,12 @@
   "description": "A node.js module which provides you a publisher and a subscriber, allowing you to easily run repetitive tasks. With Typescript support.",
   "main": "dist/lib/index.js",
   "types": "dist/lib/index.d.ts",
+  "files": [
+    "package.json",
+    "bundled",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "clean": "shx rm -rf dist bundled",
     "pretranspile": "npm run clean",
