@@ -11,7 +11,7 @@ interface ProtocolDetails {
 }
 
 /**
- * The interface contains generic options, such as the ones that handle 
+ * The interface contains generic options, such as the ones that handle
  * the url and the one to handle the error.
  */
 interface MqttOptions {
@@ -20,7 +20,7 @@ interface MqttOptions {
      */
     type?: Protocol;
     /**
-     * Specifies the protocol to use in the url string. 
+     * Specifies the protocol to use in the url string.
      * Note: overwrites the protocol specified by type property but is overwritten by url property.
      */
     protocol?: string;
@@ -30,7 +30,7 @@ interface MqttOptions {
      */
     host?: string;
     /**
-     * Specifies the port to use in the url string. 
+     * Specifies the port to use in the url string.
      * Note: overwrites the port specified by type property but is overwritten by url property.
      */
     port?: number;
@@ -78,7 +78,7 @@ export interface MqttPublishAction {
     /**
      * The message that will be published.
      */
-    message: (string | Buffer) | (() => (string | Buffer));
+    message: (string | Buffer) | (() => string | Buffer);
     /**
      * What will be executed in case of a publishing error.
      * Note: overwrites the onError callback specified by the options.
@@ -163,10 +163,10 @@ export interface MqttPublisherAction {
      */
     topic: string;
     /**
-     * The message that will be published. It can be a constant value or a function that returns the value. 
+     * The message that will be published. It can be a constant value or a function that returns the value.
      * In case it is a function, the function can use the data passed as the second argument when publisher is called.
      */
-    message: (string | Buffer) | ((data?: any) => (string | Buffer));
+    message: (string | Buffer) | ((data?: any) => string | Buffer);
     /**
      * What will be executed in case of a publishing error.
      * Note: overwrites the onError callback specified by the options.
@@ -189,12 +189,11 @@ export interface MqttPublisherOptions extends MqttOptions {
 const MQTT_PROTOCOL: ProtocolDetails = {
     protocol: 'mqtt',
     port: 1883
-}
+};
 const WS_PROTOCOL: ProtocolDetails = {
     protocol: 'ws',
     port: 9001
-}
-
+};
 
 const PUBLISH_DEFAULT_OPTIONS: MqttPublishOptions = {
     type: Protocol.MQTT,
@@ -204,7 +203,7 @@ const PUBLISH_DEFAULT_OPTIONS: MqttPublishOptions = {
     url: undefined,
     actions: [],
     interval: 1000,
-    onError: _ => { }
+    onError: _ => {}
 };
 
 const SUBSCRIBE_DEFAULT_OPTIONS: MqttSubscribeOptions = {
@@ -214,8 +213,8 @@ const SUBSCRIBE_DEFAULT_OPTIONS: MqttSubscribeOptions = {
     port: undefined,
     url: undefined,
     actions: [],
-    onError: _ => { },
-    onMessage: _ => { },
+    onError: _ => {},
+    onMessage: _ => {},
     messageType: MessageType.BUFFER
 };
 
@@ -226,7 +225,7 @@ const PUBLISHER_DEFAULT_OPTIONS: MqttPublisherOptions = {
     port: undefined,
     url: undefined,
     actions: [],
-    onError: _ => { }
+    onError: _ => {}
 };
 
 /* SUPPORT FUNCTIONS */
@@ -235,13 +234,12 @@ function mergePublishOptions(options?: MqttPublishOptions): MqttPublishOptions {
     let result: MqttPublishOptions = {};
     if (options) {
         for (const key in PUBLISH_DEFAULT_OPTIONS) {
-            result[key] = (options[key] !== undefined) ? options[key] : PUBLISH_DEFAULT_OPTIONS[key];
+            result[key] = options[key] !== undefined ? options[key] : PUBLISH_DEFAULT_OPTIONS[key];
         }
         if (result.interval < 0) {
             result.interval = 1;
         }
-    }
-    else {
+    } else {
         result = PUBLISH_DEFAULT_OPTIONS;
     }
     return result;
@@ -251,10 +249,9 @@ function mergeSubscribeOptions(options?: MqttSubscribeOptions): MqttSubscribeOpt
     let result: MqttSubscribeOptions = {};
     if (options) {
         for (const key in SUBSCRIBE_DEFAULT_OPTIONS) {
-            result[key] = (options[key] !== undefined) ? options[key] : SUBSCRIBE_DEFAULT_OPTIONS[key];
+            result[key] = options[key] !== undefined ? options[key] : SUBSCRIBE_DEFAULT_OPTIONS[key];
         }
-    }
-    else {
+    } else {
         result = SUBSCRIBE_DEFAULT_OPTIONS;
     }
     return result;
@@ -264,10 +261,9 @@ function mergePublisherOptions(options?: MqttPublisherOptions): MqttPublisherOpt
     let result: MqttPublisherOptions = {};
     if (options) {
         for (const key in PUBLISHER_DEFAULT_OPTIONS) {
-            result[key] = (options[key] !== undefined) ? options[key] : PUBLISHER_DEFAULT_OPTIONS[key];
+            result[key] = options[key] !== undefined ? options[key] : PUBLISHER_DEFAULT_OPTIONS[key];
         }
-    }
-    else {
+    } else {
         result = PUBLISHER_DEFAULT_OPTIONS;
     }
     return result;
@@ -288,8 +284,7 @@ function getUrlFromOptions(options: MqttOptions): string {
     let url: string;
     if (options.url) {
         url = options.url;
-    }
-    else {
+    } else {
         const fallback = getProtocolDetails(options.type);
         const protocol = options.protocol || fallback.protocol;
         const host = options.host;
@@ -299,16 +294,15 @@ function getUrlFromOptions(options: MqttOptions): string {
     return url;
 }
 
-function getMessage(message: (string | Buffer) | ((data?: any) => (string | Buffer)), data?: any): (string | Buffer) {
+function getMessage(message: (string | Buffer) | ((data?: any) => string | Buffer), data?: any): string | Buffer {
     if (typeof message === 'string' || message instanceof Buffer) {
         return message;
-    }
-    else {
+    } else {
         return message(data);
     }
 }
 
-function getPayload(payload: Buffer, type: MessageType): (string | Buffer) {
+function getPayload(payload: Buffer, type: MessageType): string | Buffer {
     switch (type) {
         case MessageType.BUFFER:
             return payload;
@@ -322,7 +316,7 @@ function getPayload(payload: Buffer, type: MessageType): (string | Buffer) {
 /**
  * This function publishes every a certain amount of time the data to the topics specified by
  * the options.
- * @param options The options which specifies which topics and which data have to be sent and 
+ * @param options The options which specifies which topics and which data have to be sent and
  * which url these things will be sent to.
  */
 export function publish(options: MqttPublishOptions): void {
@@ -331,9 +325,16 @@ export function publish(options: MqttPublishOptions): void {
     const client = connect(url);
     client.on('connect', () => {
         opt.actions.forEach(({ topic, message, onError, interval }) => {
-            setInterval(() => {
-                client.publish(topic, getMessage(message), error => { if (error) { (onError || opt.onError) (error); } });
-            }, (interval !== undefined ? interval : opt.interval));
+            setInterval(
+                () => {
+                    client.publish(topic, getMessage(message), error => {
+                        if (error) {
+                            (onError || opt.onError)(error);
+                        }
+                    });
+                },
+                interval !== undefined ? interval : opt.interval
+            );
         });
     });
 }
@@ -349,25 +350,28 @@ export function subscribe(options: MqttSubscribeOptions): void {
     const url = getUrlFromOptions(opt);
     const client = connect(url);
     client.on('connect', () => {
-        opt.actions
-            .forEach(({ topic, onMessage: _, onError }) => {
-                client.subscribe(topic, error => { if (error) { (onError || opt.onError) (error); } });
+        opt.actions.forEach(({ topic, onMessage: _, onError }) => {
+            client.subscribe(topic, error => {
+                if (error) {
+                    (onError || opt.onError)(error);
+                }
             });
+        });
         client.on('message', (topic, payload) => {
             const action = opt.actions.find(action => action.topic === topic);
             if (action) {
-                (action.onMessage || opt.onMessage) (getPayload(payload, (action.messageType || opt.messageType)));
+                (action.onMessage || opt.onMessage)(getPayload(payload, action.messageType || opt.messageType));
             }
         });
     });
 }
 
 /**
- * This function returns a promise with a Publisher, which is a function that takes a list of topics and in case some data as 
- * arguments and when is called publishes everything is specified in the options given to this function. 
+ * This function returns a promise with a Publisher, which is a function that takes a list of topics and in case some data as
+ * arguments and when is called publishes everything is specified in the options given to this function.
  * In the returned function: If no topic or an  empty string is passed, it publishes all the topics. Also, in case data is passed
  * as second argument, it will passed as the argument of each function that generates the message for a topic.
- * @param options The options which specifies which topics and which data have to be sent and 
+ * @param options The options which specifies which topics and which data have to be sent and
  * which url these things will be sent to.
  */
 export async function getPublisher(options: MqttPublisherOptions): Promise<Publisher> {
@@ -377,10 +381,14 @@ export async function getPublisher(options: MqttPublisherOptions): Promise<Publi
         const client = connect(url);
         client.on('connect', () => {
             resolve((topics?: string | string[], data?: any) => {
-                topics = typeof topics === 'string' && topics !== '' ? [ topics ] : topics;
+                topics = typeof topics === 'string' && topics !== '' ? [topics] : topics;
                 opt.actions.forEach(({ topic, message, onError }) => {
                     if (!topics || topics.includes(topic)) {
-                        client.publish(topic, getMessage(message, data), error => { if (error) { (onError || opt.onError) (error); } });
+                        client.publish(topic, getMessage(message, data), error => {
+                            if (error) {
+                                (onError || opt.onError)(error);
+                            }
+                        });
                     }
                 });
             });
